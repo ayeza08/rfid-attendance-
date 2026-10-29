@@ -8,404 +8,387 @@
   <style>
     * {
       box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
 
     body {
-      margin: 0;
       font-family: Arial, sans-serif;
-      background-color: #f0f4f8;
+      background: #f3f6fc;
       color: #1e293b;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: auto;
     }
 
     header {
-      background: linear-gradient(135deg, #1d4ed8, #6366f1);
+      background: #1e3a8a;
       color: white;
-      text-align: center;
-      padding: 30px 15px;
+      padding: 25px;
+      border-radius: 15px;
+      margin-bottom: 25px;
     }
 
     header h1 {
-      margin: 0 0 10px;
-      font-size: 28px;
+      margin-bottom: 8px;
+      font-size: 26px;
     }
 
     header p {
-      margin: 0;
-      font-size: 15px;
+      color: #dbeafe;
     }
 
-    main {
-      max-width: 1000px;
-      margin: 25px auto;
-      padding: 0 15px;
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 15px;
+      margin-bottom: 25px;
     }
 
     .card {
-      background-color: white;
+      background: white;
       padding: 22px;
-      margin-bottom: 22px;
-      border-radius: 14px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      border-radius: 12px;
+      box-shadow: 0 3px 12px #0000000d;
+    }
+
+    .card p {
+      color: #64748b;
+      margin-bottom: 12px;
     }
 
     .card h2 {
-      margin-top: 0;
       color: #1d4ed8;
+      font-size: 30px;
     }
 
-    .status {
-      display: inline-block;
-      padding: 10px 14px;
+    .attendance {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 3px 12px #0000000d;
+    }
+
+    .attendance h2 {
+      margin-bottom: 18px;
+    }
+
+    .search {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #cbd5e1;
       border-radius: 8px;
-      font-weight: bold;
-      background-color: #fef3c7;
-      color: #92400e;
-    }
-
-    .online {
-      background-color: #dcfce7;
-      color: #15803d;
-    }
-
-    .offline {
-      background-color: #fee2e2;
-      color: #b91c1c;
-    }
-
-    .waiting {
-      background-color: #fef3c7;
-      color: #92400e;
-    }
-
-    #lastUpdate {
-      color: #64748b;
-      font-size: 14px;
-      margin-top: 15px;
+      margin-bottom: 18px;
+      font-size: 15px;
     }
 
     .table-container {
-      width: 100%;
       overflow-x: auto;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 15px;
-      min-width: 600px;
-    }
-
-    thead {
-      background-color: #1d4ed8;
-      color: white;
+      min-width: 700px;
     }
 
     th, td {
       padding: 14px 12px;
-      text-align: left;
       border-bottom: 1px solid #e2e8f0;
+      text-align: left;
+      font-size: 14px;
     }
 
-    tbody tr:nth-child(even) {
-      background-color: #f8fafc;
+    th {
+      background: #eff6ff;
+      color: #1e40af;
     }
 
-    tbody tr:hover {
-      background-color: #eff6ff;
+    .status {
+      padding: 6px 10px;
+      border-radius: 20px;
+      background: #fef3c7;
+      color: #92400e;
+      font-size: 12px;
+      white-space: nowrap;
     }
 
-    .empty {
-      text-align: center;
+    .complete {
+      background: #dcfce7;
+      color: #166534;
+    }
+
+    #message {
+      margin-top: 15px;
       color: #64748b;
-      padding: 25px;
-    }
-
-    #recordCount {
-      color: #475569;
-      font-weight: bold;
+      font-size: 13px;
+      line-height: 1.6;
     }
 
     footer {
       text-align: center;
-      padding: 20px;
       color: #64748b;
-      font-size: 13px;
-    }
-
-    @media (max-width: 600px) {
-      header h1 {
-        font-size: 23px;
-      }
-
-      .card {
-        padding: 16px;
-      }
+      margin-top: 25px;
+      font-size: 12px;
     }
   </style>
 </head>
 
 <body>
+<div class="container">
 
   <header>
     <h1>RFID Attendance System</h1>
-    <p>Student Attendance Monitoring Dashboard</p>
+    <p>Student Attendance Dashboard | Time In and Time Out</p>
   </header>
 
-  <main>
+  <section class="cards">
+    <div class="card">
+      <p>Total Attendance Sessions</p>
+      <h2 id="total">0</h2>
+    </div>
 
-    <section class="card">
-      <h2>System Status</h2>
+    <div class="card">
+      <p>Completed Sessions</p>
+      <h2 id="completed">0</h2>
+    </div>
 
-      <p id="connectionStatus" class="status waiting">
-        Connecting to Firebase...
-      </p>
+    <div class="card">
+      <p>Today's Sessions</p>
+      <h2 id="today">0</h2>
+    </div>
+  </section>
 
-      <p id="lastUpdate">
-        Waiting for attendance records.
-      </p>
-    </section>
+  <section class="attendance">
+    <h2>Attendance Records</h2>
 
-    <section class="card">
-      <h2>Attendance Records</h2>
+    <input
+      type="search"
+      id="search"
+      class="search"
+      placeholder="Search student name or RFID UID..."
+    >
 
-      <p id="recordCount">Total Records: 0</p>
+    <div class="table-container">
+      <table>
+        <thead>
+          <tr>
+            <th>Student Name</th>
+            <th>RFID UID</th>
+            <th>Date</th>
+            <th>Time In</th>
+            <th>Time Out</th>
+            <th>Status</th>
+          </tr>
+        </thead>
 
-      <div class="table-container">
-        <table>
-          <thead>
-            <tr>
-              <th>Student Name</th>
-              <th>RFID UID</th>
-              <th>Date and Time</th>
-              <th>Status</th>
-            </tr>
-          </thead>
+        <tbody id="records">
+          <tr>
+            <td colspan="6">Connecting to Firebase...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
-          <tbody id="attendanceTable">
-            <tr>
-              <td colspan="4" class="empty">
-                Connecting to database...
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-
-  </main>
+    <p id="message">
+      Waiting for attendance data from Firebase.
+    </p>
+  </section>
 
   <footer>
-    RFID Attendance System &copy; 2026
+    RFID-Based Student Attendance Monitoring System
   </footer>
 
-  <script type="module">
-    import { initializeApp } from
-      "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
+</div>
 
-    import { getDatabase, ref, onValue } from
-      "https://www.gstatic.com/firebasejs/13.1.0/firebase-database.js";
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyDb9KlaSTefhpdrJ-x4axAqVPijTLIiuGI",
-      authDomain: "rfid-attendance-221f2.firebaseapp.com",
-      databaseURL: "https://rfid-attendance-221f2-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "rfid-attendance-221f2",
-      storageBucket: "rfid-attendance-221f2.firebasestorage.app",
-      messagingSenderId: "1079356972775",
-      appId: "1:1079356972775:web:3b73bbbd0d92576eaa0c42",
-      measurementId: "G-ZG9EWTYWMP"
-    };
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDb9KlaSTefhpdrJ-x4axAqVPijTLIiuGI",
+    authDomain: "rfid-attendance-221f2.firebaseapp.com",
+    databaseURL: "https://rfid-attendance-221f2-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "rfid-attendance-221f2",
+    storageBucket: "rfid-attendance-221f2.firebasestorage.app",
+    messagingSenderId: "1079356972775",
+    appId: "1:1079356972775:web:3b73bbbd0d92576eaa0c42",
+    measurementId: "G-ZG9EWTYWMP"
+  };
 
-    const statusElement =
-      document.getElementById("connectionStatus");
+  const app = firebase.initializeApp(firebaseConfig);
+  const database = firebase.database();
 
-    const updateElement =
-      document.getElementById("lastUpdate");
+  let sessions = [];
 
-    const tableElement =
-      document.getElementById("attendanceTable");
+  function escapeHTML(value) {
+    return String(value ?? "").replace(/[&<>"']/g, function(c) {
+      return {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[c];
+    });
+  }
 
-    const countElement =
-      document.getElementById("recordCount");
+  function getDate(record) {
+    if (record.date) return String(record.date);
 
-    function setStatus(message, className) {
-      statusElement.textContent = message;
-      statusElement.className = "status " + className;
+    const timestamp = Number(record.timestamp || 0);
+
+    if (timestamp) {
+      const d = new Date(timestamp < 1e12 ? timestamp * 1000 : timestamp);
+      return d.getFullYear() + "-" +
+        String(d.getMonth() + 1).padStart(2, "0") + "-" +
+        String(d.getDate()).padStart(2, "0");
     }
 
-    function addCell(row, value) {
-      const cell = document.createElement("td");
+    return "";
+  }
 
-      cell.textContent =
-        value === undefined || value === null || value === ""
-          ? "—"
-          : String(value);
+  function getTime(record) {
+    if (record.timeIn) return String(record.timeIn);
+    if (record.time) return String(record.time);
+    if (record.timeOut) return String(record.timeOut);
 
-      row.appendChild(cell);
-    }
+    const timestamp = Number(record.timestamp || 0);
 
-    function formatDateTime(record) {
-      const value =
-        record.timestamp ??
-        record.dateTime ??
-        record.datetime;
-
-      if (value === undefined || value === null || value === "") {
-        return "Not provided";
-      }
-
-      let date;
-
-      if (typeof value === "number") {
-        date = new Date(
-          value < 100000000000 ? value * 1000 : value
-        );
-      } else if (
-        typeof value === "string" &&
-        /^\d+$/.test(value)
-      ) {
-        const numberValue = Number(value);
-
-        date = new Date(
-          numberValue < 100000000000
-            ? numberValue * 1000
-            : numberValue
-        );
-      } else {
-        date = new Date(value);
-      }
-
-      if (Number.isNaN(date.getTime())) {
-        return String(value);
-      }
-
-      return date.toLocaleString("en-PH", {
-        dateStyle: "medium",
-        timeStyle: "medium",
-        timeZone: "Asia/Manila"
+    if (timestamp) {
+      const d = new Date(timestamp < 1e12 ? timestamp * 1000 : timestamp);
+      return d.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit"
       });
     }
 
-    function displayAttendance(data) {
-      tableElement.replaceChildren();
+    return "";
+  }
 
-      const records = Object.entries(data || {});
+  function buildSessions(data) {
+    const events = [];
 
-      records.sort((a, b) => {
-        function getTime(record) {
-          const value =
-            record.timestamp ??
-            record.dateTime ??
-            record.datetime;
+    if (!data || typeof data !== "object") return [];
 
-          if (typeof value === "number") {
-            return value;
-          }
+    Object.entries(data).forEach(([key, record]) => {
+      if (!record || typeof record !== "object") return;
 
-          if (typeof value === "string" && /^\d+$/.test(value)) {
-            return Number(value);
-          }
+      const timestamp = Number(record.timestamp || 0);
 
-          const parsed = Date.parse(value || "");
-          return Number.isNaN(parsed) ? 0 : parsed;
-        }
-
-        return getTime(b[1]) - getTime(a[1]);
+      events.push({
+        key: key,
+        name: record.name || record.studentName || "Unknown",
+        uid: record.uid || record.rfid || "—",
+        date: getDate(record),
+        time: getTime(record),
+        timestamp: timestamp
+          ? (timestamp < 1e12 ? timestamp * 1000 : timestamp)
+          : 0
       });
+    });
 
-      countElement.textContent =
-        "Total Records: " + records.length;
+    events.sort((a, b) => a.timestamp - b.timestamp);
 
-      if (records.length === 0) {
-        const row = document.createElement("tr");
-        const cell = document.createElement("td");
+    const grouped = {};
 
-        cell.colSpan = 4;
-        cell.className = "empty";
-        cell.textContent = "No attendance records yet.";
+    events.forEach(event => {
+      const key = event.uid + "|" + event.date;
 
-        row.appendChild(cell);
-        tableElement.appendChild(row);
+      if (!grouped[key]) grouped[key] = [];
 
-        updateElement.textContent =
-          "Connected to Firebase. Waiting for attendance records.";
+      grouped[key].push(event);
+    });
 
-        return;
+    const result = [];
+
+    Object.values(grouped).forEach(taps => {
+      taps.sort((a, b) => a.timestamp - b.timestamp);
+
+      for (let i = 0; i < taps.length; i += 2) {
+        const timeIn = taps[i];
+        const timeOut = taps[i + 1];
+
+        result.push({
+          name: timeIn.name,
+          uid: timeIn.uid,
+          date: timeIn.date,
+          timeIn: timeIn.time || "—",
+          timeOut: timeOut ? (timeOut.time || "—") : "—",
+          complete: Boolean(timeOut),
+          timestamp: timeIn.timestamp
+        });
       }
+    });
 
-      for (const [key, record] of records) {
-        const row = document.createElement("tr");
+    return result.sort((a, b) => b.timestamp - a.timestamp);
+  }
 
-        addCell(
-          row,
-          record.studentName ?? record.name
-        );
+  function render() {
+    const query = document.getElementById("search")
+      .value.toLowerCase().trim();
 
-        addCell(
-          row,
-          record.uid ?? record.rfidUID
-        );
+    const filtered = sessions.filter(s =>
+      (s.name + " " + s.uid + " " + s.date)
+        .toLowerCase().includes(query)
+    );
 
-        addCell(
-          row,
-          formatDateTime(record)
-        );
+    document.getElementById("total").textContent = sessions.length;
 
-        addCell(
-          row,
-          record.status ?? "Present"
-        );
+    document.getElementById("completed").textContent =
+      sessions.filter(s => s.complete).length;
 
-        tableElement.appendChild(row);
-      }
+    const now = new Date();
+    const todayDate = now.getFullYear() + "-" +
+      String(now.getMonth() + 1).padStart(2, "0") + "-" +
+      String(now.getDate()).padStart(2, "0");
 
-      updateElement.textContent =
-        "Attendance records updated successfully.";
+    document.getElementById("today").textContent =
+      sessions.filter(s => s.date === todayDate).length;
+
+    const tbody = document.getElementById("records");
+
+    if (filtered.length === 0) {
+      tbody.innerHTML =
+        '<tr><td colspan="6">No attendance records found.</td></tr>';
+      return;
     }
 
-    try {
-      const app = initializeApp(firebaseConfig);
-      const database = getDatabase(app);
-      const attendanceRef = ref(database, "attendance");
+    tbody.innerHTML = filtered.map(s => `
+      <tr>
+        <td>${escapeHTML(s.name)}</td>
+        <td>${escapeHTML(s.uid)}</td>
+        <td>${escapeHTML(s.date || "—")}</td>
+        <td>${escapeHTML(s.timeIn)}</td>
+        <td>${escapeHTML(s.timeOut)}</td>
+        <td>
+          <span class="status ${s.complete ? "complete" : ""}">
+            ${s.complete ? "Completed" : "Time In only"}
+          </span>
+        </td>
+      </tr>
+    `).join("");
+  }
 
-      onValue(
-        attendanceRef,
-        (snapshot) => {
-          setStatus("Connected to Firebase", "online");
-          displayAttendance(snapshot.val());
-        },
-        (error) => {
-          console.error("Firebase database error:", error);
+  database.ref("attendance").on("value", snapshot => {
+    sessions = buildSessions(snapshot.val());
+    render();
 
-          setStatus("Unable to read database", "offline");
+    document.getElementById("message").textContent =
+      sessions.length
+        ? "Connected to Firebase. Attendance records update automatically."
+        : "Connected to Firebase, but no attendance records have been uploaded yet.";
+  }, error => {
+    document.getElementById("message").textContent =
+      "Firebase error: " + error.message +
+      ". Check your Realtime Database URL and security rules.";
+  });
 
-          updateElement.textContent =
-            "Check your Firebase connection and database permissions.";
-
-          tableElement.replaceChildren();
-
-          const row = document.createElement("tr");
-          const cell = document.createElement("td");
-
-          cell.colSpan = 4;
-          cell.className = "empty";
-          cell.textContent =
-            "Unable to load attendance records.";
-
-          row.appendChild(cell);
-          tableElement.appendChild(row);
-        }
-      );
-
-    } catch (error) {
-      console.error("Firebase initialization error:", error);
-
-      setStatus("Firebase setup error", "offline");
-
-      updateElement.textContent =
-        "Please check the Firebase configuration.";
-    }
-  </script>
-
+  document.getElementById("search").addEventListener("input", render);
+</script>
 </body>
 </html>
