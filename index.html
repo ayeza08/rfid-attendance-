@@ -1,85 +1,145 @@
-`html
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <title>RFID Attendance System</title>
 
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      background: #f3f6fb;
-      color: #1f2937;
+      background-color: #f0f4f8;
+      color: #1e293b;
     }
 
     header {
-      background: #1d4ed8;
+      background: linear-gradient(135deg, #1d4ed8, #6366f1);
       color: white;
-      padding: 20px;
       text-align: center;
+      padding: 30px 15px;
+    }
+
+    header h1 {
+      margin: 0 0 10px;
+      font-size: 28px;
+    }
+
+    header p {
+      margin: 0;
+      font-size: 15px;
     }
 
     main {
-      max-width: 900px;
+      max-width: 1000px;
       margin: 25px auto;
-      padding: 0 16px;
+      padding: 0 15px;
     }
 
     .card {
-      background: white;
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 20px;
-      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+      background-color: white;
+      padding: 22px;
+      margin-bottom: 22px;
+      border-radius: 14px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    .card h2 {
+      margin-top: 0;
+      color: #1d4ed8;
     }
 
     .status {
+      display: inline-block;
+      padding: 10px 14px;
+      border-radius: 8px;
       font-weight: bold;
+      background-color: #fef3c7;
+      color: #92400e;
     }
 
     .online {
+      background-color: #dcfce7;
       color: #15803d;
     }
 
     .offline {
+      background-color: #fee2e2;
       color: #b91c1c;
     }
 
     .waiting {
-      color: #b45309;
+      background-color: #fef3c7;
+      color: #92400e;
+    }
+
+    #lastUpdate {
+      color: #64748b;
+      font-size: 14px;
+      margin-top: 15px;
     }
 
     .table-container {
+      width: 100%;
       overflow-x: auto;
     }
 
     table {
       width: 100%;
       border-collapse: collapse;
-      min-width: 550px;
+      margin-top: 15px;
+      min-width: 600px;
+    }
+
+    thead {
+      background-color: #1d4ed8;
+      color: white;
     }
 
     th, td {
-      padding: 12px;
-      border-bottom: 1px solid #e5e7eb;
+      padding: 14px 12px;
       text-align: left;
+      border-bottom: 1px solid #e2e8f0;
     }
 
-    th {
-      background: #dbeafe;
+    tbody tr:nth-child(even) {
+      background-color: #f8fafc;
+    }
+
+    tbody tr:hover {
+      background-color: #eff6ff;
     }
 
     .empty {
       text-align: center;
-      color: #6b7280;
+      color: #64748b;
+      padding: 25px;
     }
 
     #recordCount {
-      color: #4b5563;
-      font-size: 14px;
+      color: #475569;
+      font-weight: bold;
+    }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      color: #64748b;
+      font-size: 13px;
+    }
+
+    @media (max-width: 600px) {
+      header h1 {
+        font-size: 23px;
+      }
+
+      .card {
+        padding: 16px;
+      }
     }
   </style>
 </head>
@@ -88,7 +148,7 @@
 
   <header>
     <h1>RFID Attendance System</h1>
-    <p>Attendance Monitoring Dashboard</p>
+    <p>Student Attendance Monitoring Dashboard</p>
   </header>
 
   <main>
@@ -108,7 +168,7 @@
     <section class="card">
       <h2>Attendance Records</h2>
 
-      <p id="recordCount">Total records: 0</p>
+      <p id="recordCount">Total Records: 0</p>
 
       <div class="table-container">
         <table>
@@ -134,30 +194,27 @@
 
   </main>
 
+  <footer>
+    RFID Attendance System &copy; 2026
+  </footer>
+
   <script type="module">
-    import {
-      initializeApp
-    } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
+    import { initializeApp } from
+      "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
 
-    import {
-      getDatabase,
-      ref,
-      onValue
-    } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-database.js";
+    import { getDatabase, ref, onValue } from
+      "https://www.gstatic.com/firebasejs/13.1.0/firebase-database.js";
 
-
-    // YOUR FIREBASE CONFIGURATION
     const firebaseConfig = {
       apiKey: "AIzaSyDb9KlaSTefhpdrJ-x4axAqVPijTLIiuGI",
       authDomain: "rfid-attendance-221f2.firebaseapp.com",
-      databaseURL: "https://rfid-attendance-221f2-default-rtdb.asia-southeast1.firebasedatabase.app/",
+      databaseURL: "https://rfid-attendance-221f2-default-rtdb.asia-southeast1.firebasedatabase.app",
       projectId: "rfid-attendance-221f2",
       storageBucket: "rfid-attendance-221f2.firebasestorage.app",
       messagingSenderId: "1079356972775",
       appId: "1:1079356972775:web:3b73bbbd0d92576eaa0c42",
       measurementId: "G-ZG9EWTYWMP"
     };
-
 
     const statusElement =
       document.getElementById("connectionStatus");
@@ -171,12 +228,10 @@
     const countElement =
       document.getElementById("recordCount");
 
-
     function setStatus(message, className) {
       statusElement.textContent = message;
       statusElement.className = "status " + className;
     }
-
 
     function addCell(row, value) {
       const cell = document.createElement("td");
@@ -188,7 +243,6 @@
 
       row.appendChild(cell);
     }
-
 
     function formatDateTime(record) {
       const value =
@@ -206,6 +260,17 @@
         date = new Date(
           value < 100000000000 ? value * 1000 : value
         );
+      } else if (
+        typeof value === "string" &&
+        /^\d+$/.test(value)
+      ) {
+        const numberValue = Number(value);
+
+        date = new Date(
+          numberValue < 100000000000
+            ? numberValue * 1000
+            : numberValue
+        );
       } else {
         date = new Date(value);
       }
@@ -221,27 +286,35 @@
       });
     }
 
-
     function displayAttendance(data) {
       tableElement.replaceChildren();
 
       const records = Object.entries(data || {});
 
       records.sort((a, b) => {
-        const timeA = Number(
-          a[1].timestamp ?? 0
-        );
+        function getTime(record) {
+          const value =
+            record.timestamp ??
+            record.dateTime ??
+            record.datetime;
 
-        const timeB = Number(
-          b[1].timestamp ?? 0
-        );
+          if (typeof value === "number") {
+            return value;
+          }
 
-        return timeB - timeA;
+          if (typeof value === "string" && /^\d+$/.test(value)) {
+            return Number(value);
+          }
+
+          const parsed = Date.parse(value || "");
+          return Number.isNaN(parsed) ? 0 : parsed;
+        }
+
+        return getTime(b[1]) - getTime(a[1]);
       });
 
       countElement.textContent =
-        "Total records: " + records.length;
-
+        "Total Records: " + records.length;
 
       if (records.length === 0) {
         const row = document.createElement("tr");
@@ -255,11 +328,10 @@
         tableElement.appendChild(row);
 
         updateElement.textContent =
-          "Connected. Waiting for attendance records.";
+          "Connected to Firebase. Waiting for attendance records.";
 
         return;
       }
-
 
       for (const [key, record] of records) {
         const row = document.createElement("tr");
@@ -291,30 +363,49 @@
         "Attendance records updated successfully.";
     }
 
-
     try {
       const app = initializeApp(firebaseConfig);
       const database = getDatabase(app);
-
-      // Listen for changes in the "attendance" database path.
       const attendanceRef = ref(database, "attendance");
 
       onValue(
         attendanceRef,
-
         (snapshot) => {
           setStatus("Connected to Firebase", "online");
           displayAttendance(snapshot.val());
         },
-
         (error) => {
           console.error("Firebase database error:", error);
 
           setStatus("Unable to read database", "offline");
 
           updateElement.textContent =
-            "Check your Firebase database rules and connection.";
+            "Check your Firebase connection and database permissions.";
 
           tableElement.replaceChildren();
 
-          const row = document
+          const row = document.createElement("tr");
+          const cell = document.createElement("td");
+
+          cell.colSpan = 4;
+          cell.className = "empty";
+          cell.textContent =
+            "Unable to load attendance records.";
+
+          row.appendChild(cell);
+          tableElement.appendChild(row);
+        }
+      );
+
+    } catch (error) {
+      console.error("Firebase initialization error:", error);
+
+      setStatus("Firebase setup error", "offline");
+
+      updateElement.textContent =
+        "Please check the Firebase configuration.";
+    }
+  </script>
+
+</body>
+</html>
