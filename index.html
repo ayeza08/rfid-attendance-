@@ -1,8 +1,10 @@
+`html
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>RFID Attendance System</title>
 
   <style>
@@ -34,9 +36,30 @@
       box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
     }
 
+    .status {
+      font-weight: bold;
+    }
+
+    .online {
+      color: #15803d;
+    }
+
+    .offline {
+      color: #b91c1c;
+    }
+
+    .waiting {
+      color: #b45309;
+    }
+
+    .table-container {
+      overflow-x: auto;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
+      min-width: 550px;
     }
 
     th, td {
@@ -49,46 +72,249 @@
       background: #dbeafe;
     }
 
-    .online {
-      color: #15803d;
-      font-weight: bold;
+    .empty {
+      text-align: center;
+      color: #6b7280;
+    }
+
+    #recordCount {
+      color: #4b5563;
+      font-size: 14px;
     }
   </style>
 </head>
 
 <body>
+
   <header>
     <h1>RFID Attendance System</h1>
     <p>Attendance Monitoring Dashboard</p>
   </header>
 
   <main>
+
     <section class="card">
       <h2>System Status</h2>
-      <p class="online">Website is online.</p>
-      <p>Waiting for RFID attendance records.</p>
+
+      <p id="connectionStatus" class="status waiting">
+        Connecting to Firebase...
+      </p>
+
+      <p id="lastUpdate">
+        Waiting for attendance records.
+      </p>
     </section>
 
     <section class="card">
       <h2>Attendance Records</h2>
 
-      <table>
-        <thead>
-          <tr>
-            <th>Student Name</th>
-            <th>RFID UID</th>
-            <th>Date and Time</th>
-            <th>Status</th>
-          </tr>
-        </thead>
+      <p id="recordCount">Total records: 0</p>
 
-        <tbody>
-          <tr>
-            <td colspan="4">No attendance records yet.</td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th>Student Name</th>
+              <th>RFID UID</th>
+              <th>Date and Time</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+
+          <tbody id="attendanceTable">
+            <tr>
+              <td colspan="4" class="empty">
+                Connecting to database...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </section>
+
   </main>
-</body>
-</html>
+
+  <script type="module">
+    import {
+      initializeApp
+    } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-app.js";
+
+    import {
+      getDatabase,
+      ref,
+      onValue
+    } from "https://www.gstatic.com/firebasejs/13.1.0/firebase-database.js";
+
+
+    // YOUR FIREBASE CONFIGURATION
+    const firebaseConfig = {
+      apiKey: "AIzaSyDb9KlaSTefhpdrJ-x4axAqVPijTLIiuGI",
+      authDomain: "rfid-attendance-221f2.firebaseapp.com",
+      databaseURL: "https://rfid-attendance-221f2-default-rtdb.asia-southeast1.firebasedatabase.app/",
+      projectId: "rfid-attendance-221f2",
+      storageBucket: "rfid-attendance-221f2.firebasestorage.app",
+      messagingSenderId: "1079356972775",
+      appId: "1:1079356972775:web:3b73bbbd0d92576eaa0c42",
+      measurementId: "G-ZG9EWTYWMP"
+    };
+
+
+    const statusElement =
+      document.getElementById("connectionStatus");
+
+    const updateElement =
+      document.getElementById("lastUpdate");
+
+    const tableElement =
+      document.getElementById("attendanceTable");
+
+    const countElement =
+      document.getElementById("recordCount");
+
+
+    function setStatus(message, className) {
+      statusElement.textContent = message;
+      statusElement.className = "status " + className;
+    }
+
+
+    function addCell(row, value) {
+      const cell = document.createElement("td");
+
+      cell.textContent =
+        value === undefined || value === null || value === ""
+          ? "—"
+          : String(value);
+
+      row.appendChild(cell);
+    }
+
+
+    function formatDateTime(record) {
+      const value =
+        record.timestamp ??
+        record.dateTime ??
+        record.datetime;
+
+      if (value === undefined || value === null || value === "") {
+        return "Not provided";
+      }
+
+      let date;
+
+      if (typeof value === "number") {
+        date = new Date(
+          value < 100000000000 ? value * 1000 : value
+        );
+      } else {
+        date = new Date(value);
+      }
+
+      if (Number.isNaN(date.getTime())) {
+        return String(value);
+      }
+
+      return date.toLocaleString("en-PH", {
+        dateStyle: "medium",
+        timeStyle: "medium",
+        timeZone: "Asia/Manila"
+      });
+    }
+
+
+    function displayAttendance(data) {
+      tableElement.replaceChildren();
+
+      const records = Object.entries(data || {});
+
+      records.sort((a, b) => {
+        const timeA = Number(
+          a[1].timestamp ?? 0
+        );
+
+        const timeB = Number(
+          b[1].timestamp ?? 0
+        );
+
+        return timeB - timeA;
+      });
+
+      countElement.textContent =
+        "Total records: " + records.length;
+
+
+      if (records.length === 0) {
+        const row = document.createElement("tr");
+        const cell = document.createElement("td");
+
+        cell.colSpan = 4;
+        cell.className = "empty";
+        cell.textContent = "No attendance records yet.";
+
+        row.appendChild(cell);
+        tableElement.appendChild(row);
+
+        updateElement.textContent =
+          "Connected. Waiting for attendance records.";
+
+        return;
+      }
+
+
+      for (const [key, record] of records) {
+        const row = document.createElement("tr");
+
+        addCell(
+          row,
+          record.studentName ?? record.name
+        );
+
+        addCell(
+          row,
+          record.uid ?? record.rfidUID
+        );
+
+        addCell(
+          row,
+          formatDateTime(record)
+        );
+
+        addCell(
+          row,
+          record.status ?? "Present"
+        );
+
+        tableElement.appendChild(row);
+      }
+
+      updateElement.textContent =
+        "Attendance records updated successfully.";
+    }
+
+
+    try {
+      const app = initializeApp(firebaseConfig);
+      const database = getDatabase(app);
+
+      // Listen for changes in the "attendance" database path.
+      const attendanceRef = ref(database, "attendance");
+
+      onValue(
+        attendanceRef,
+
+        (snapshot) => {
+          setStatus("Connected to Firebase", "online");
+          displayAttendance(snapshot.val());
+        },
+
+        (error) => {
+          console.error("Firebase database error:", error);
+
+          setStatus("Unable to read database", "offline");
+
+          updateElement.textContent =
+            "Check your Firebase database rules and connection.";
+
+          tableElement.replaceChildren();
+
+          const row = document
